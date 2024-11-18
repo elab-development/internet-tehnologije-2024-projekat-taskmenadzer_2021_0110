@@ -32,6 +32,16 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'assigned_to');
+    }
+
     /**
      * The attributes that should be cast to native types.
      *
