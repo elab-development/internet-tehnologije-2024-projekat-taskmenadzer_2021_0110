@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
@@ -44,3 +45,9 @@ Route::get('/notifications/{id}', [NotificationController::class, 'show']);
 Route::post('/notifications', [NotificationController::class, 'store']);
 Route::put('/notifications/{id}', [NotificationController::class, 'update']);
 Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{id}', [CategoryController::class, 'show']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::put('/categories/{id}', [CategoryController::class, 'update']);
+Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
