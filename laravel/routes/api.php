@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -37,3 +38,9 @@ Route::get('/tasks/{id}', [TaskController::class, 'show']);
 Route::post('/tasks', [TaskController::class, 'store']);
 Route::put('/tasks/{id}', [TaskController::class, 'update']);
 Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+
+Route::get('/notifications', [NotificationController::class, 'index']);
+Route::get('/notifications/{id}', [NotificationController::class, 'show']);
+Route::post('/notifications', [NotificationController::class, 'store']);
+Route::put('/notifications/{id}', [NotificationController::class, 'update']);
+Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
