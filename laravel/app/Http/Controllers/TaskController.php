@@ -9,13 +9,32 @@ use App\Http\Resources\TaskResource;
 
 class TaskController extends Controller
 {
-    /**
-     * Prikaz svih zadataka.
+ /**
+     * Prikaz liste zadataka sa paginacijom i filtriranjem.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::all();
-        return response()->json(TaskResource::collection($tasks), 200);
+        $query = Task::query();
+
+        // Filtriranje po naslovu (title)
+        if ($request->has('title')) {
+            $query->where('title', 'like', '%' . $request->input('title') . '%');
+        }
+
+        // Filtriranje po statusu
+        if ($request->has('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Filtriranje po kategoriji (category_id)
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->input('category_id'));
+        }
+
+        // Dodavanje paginacije
+        $tasks = $query->paginate($request->input('per_page', 10)); // Default 10 stavki po stranici
+
+        return response()->json($tasks);
     }
 
     /**

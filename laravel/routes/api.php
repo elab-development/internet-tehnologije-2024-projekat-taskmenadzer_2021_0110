@@ -26,28 +26,20 @@ Route::post('/registracija', [UserController::class, 'registracija']);
 Route::post('/prijava', [UserController::class, 'prijava']);
 Route::post('/odjava', [UserController::class, 'odjava'])->middleware('auth:sanctum');
 
-// Route::middleware('auth:sanctum')->group(function () {
-//     Route::get('/tasks', [TaskController::class, 'index']);
-//     Route::get('/tasks/{id}', [TaskController::class, 'show']);
-//     Route::post('/tasks', [TaskController::class, 'store']);
-//     Route::put('/tasks/{id}', [TaskController::class, 'update']);
-//     Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
-// });
+Route::resource('tasks', TaskController::class);//->middleware('auth:sanctum');
 
-Route::get('/tasks', [TaskController::class, 'index']);
-Route::get('/tasks/{id}', [TaskController::class, 'show']);
-Route::post('/tasks', [TaskController::class, 'store']);
-Route::put('/tasks/{id}', [TaskController::class, 'update']);
-Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/{id}', [NotificationController::class, 'show']);
+    Route::post('/notifications', [NotificationController::class, 'store']);
+    Route::put('/notifications/{id}', [NotificationController::class, 'update']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+});
 
-Route::get('/notifications', [NotificationController::class, 'index']);
-Route::get('/notifications/{id}', [NotificationController::class, 'show']);
-Route::post('/notifications', [NotificationController::class, 'store']);
-Route::put('/notifications/{id}', [NotificationController::class, 'update']);
-Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
-
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::get('/categories/{id}', [CategoryController::class, 'show']);
-Route::post('/categories', [CategoryController::class, 'store']);
-Route::put('/categories/{id}', [CategoryController::class, 'update']);
-Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/categories/{id}', [CategoryController::class, 'show']);
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{id}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+});
