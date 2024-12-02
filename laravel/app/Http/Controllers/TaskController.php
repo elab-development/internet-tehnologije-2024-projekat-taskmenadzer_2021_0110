@@ -6,6 +6,7 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\TaskResource;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TaskController extends Controller
 {
@@ -101,5 +102,14 @@ class TaskController extends Controller
         $task->delete();
 
         return response()->json(['message' => 'Task deleted successfully'], 200);
+    }
+
+    public function exportToPDF()
+    {
+        $tasks = Task::all();
+
+        $pdf = Pdf::loadView('tasks.pdf', ['tasks' => $tasks]);
+
+        return $pdf->download('tasks.pdf');
     }
 }

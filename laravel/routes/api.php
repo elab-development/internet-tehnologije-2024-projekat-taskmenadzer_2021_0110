@@ -28,6 +28,8 @@ Route::post('/odjava', [UserController::class, 'odjava'])->middleware('auth:sanc
 
 Route::resource('tasks', TaskController::class);//->middleware('auth:sanctum');
 
+Route::get('/tasks/export/pdf', [TaskController::class, 'exportToPDF']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/{id}', [NotificationController::class, 'show']);
