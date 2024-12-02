@@ -9,9 +9,7 @@ use App\Http\Resources\TaskResource;
 
 class TaskController extends Controller
 {
- /**
-     * Prikaz liste zadataka sa paginacijom i filtriranjem.
-     */
+
     public function index(Request $request)
     {
         $query = Task::query();

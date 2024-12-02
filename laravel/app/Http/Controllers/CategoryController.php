@@ -6,30 +6,29 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CategoryResource;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller
 {
-    /**
-     * Prikaz svih kategorija.
-     */
+
     public function index()
     {
-        $categories = Category::all();
-        return response()->json(CategoryResource::collection($categories), 200);
+    // Keširaj kategorije na 60 minuta (3600 sekundi)
+    $categories = Cache::remember('categories_cache', 60 * 60, function () {
+        return Category::all();
+    });
+
+    return response()->json(CategoryResource::collection($categories), 200);
     }
 
-    /**
-     * Prikaz jedne kategorije prema ID-u.
-     */
+
     public function show($id)
     {
         $category = Category::findOrFail($id);
         return response()->json(new CategoryResource($category), 200);
     }
 
-    /**
-     * Kreiranje nove kategorije.
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -41,12 +40,12 @@ class CategoryController extends Controller
         }
 
         $category = Category::create($request->all());
+
+        Cache::forget('categories_cache');
         return response()->json(new CategoryResource($category), 201);
     }
 
-    /**
-     * Ažuriranje postojeće kategorije.
-     */
+
     public function update(Request $request, $id)
     {
         $category = Category::findOrFail($id);
@@ -60,16 +59,19 @@ class CategoryController extends Controller
         }
 
         $category->update($request->all());
+
+        Cache::forget('categories_cache');
+
         return response()->json(new CategoryResource($category), 200);
     }
 
-    /**
-     * Brisanje kategorije prema ID-u.
-     */
+
     public function destroy($id)
     {
         $category = Category::findOrFail($id);
         $category->delete();
+
+        Cache::forget('categories_cache');
 
         return response()->json(['message' => 'Category deleted successfully.'], 200);
     }
