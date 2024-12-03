@@ -6,7 +6,9 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\TaskResource;
+use App\Models\TaskFile;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
@@ -111,5 +113,32 @@ class TaskController extends Controller
         $pdf = Pdf::loadView('tasks.pdf', ['tasks' => $tasks]);
 
         return $pdf->download('tasks.pdf');
+    }
+
+    public function dodajFajl(Request $request,  $taskId)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048',
+        ]);
+    
+        $task = Task::findOrFail($taskId);
+    
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('uploads', 'public');
+    
+            $taskFile = TaskFile::create([
+                'task_id' => $task->id,
+                'file_path' => $path,
+                'file_name' => $file->getClientOriginalName(),
+            ]);
+    
+            return response()->json([
+                'message' => 'Fajl uspešno otpremljen i povezan sa zadatkom!',
+                'file' => $taskFile,
+            ], 201);
+        }
+    
+        return response()->json(['message' => 'Fajl nije otpremljen.'], 400);
     }
 }
