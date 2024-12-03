@@ -31,6 +31,14 @@ Route::resource('tasks', TaskController::class);//->middleware('auth:sanctum');
 Route::get('/tasks/export/pdf', [TaskController::class, 'exportToPDF']);
 Route::post('/tasks/upload/{taskId}', [TaskController::class, 'dodajFajl']);
 
+Route::post('/forgot-password', [UserController::class, 'sendResetLink']);
+Route::post('/reset-password', [UserController::class, 'resetPassword'])->name('password.update');
+
+Route::get('reset-password/{token}', function ($token) {
+    return view('auth.resetovanje-lozinke', ['token' => $token, 'email' => request('email')]);
+})->middleware('guest')->name('password.reset');
+
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/{id}', [NotificationController::class, 'show']);

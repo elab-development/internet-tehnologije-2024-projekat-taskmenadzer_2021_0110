@@ -7,6 +7,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -72,5 +73,51 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Logout successful',
         ], 200);
+    }
+
+    public function sendResetLink(Request $request)
+    {
+        // Validacija email adrese
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        // Pokušaj slanja linka za resetovanje lozinke
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        // Provera statusa
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json(['message' => 'Reset link sent to your email.'], 200);
+        }
+
+        return response()->json(['message' => 'Unable to send reset link.'], 500);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|confirmed|min:8',
+            'token' => 'required'
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->save();
+
+                $user->tokens()->delete();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json(['message' => 'Password reset successfully.']);
+        }
+
+        return response()->json(['message' => __($status)], 500);
     }
 }
