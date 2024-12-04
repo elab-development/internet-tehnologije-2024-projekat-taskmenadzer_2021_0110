@@ -26,10 +26,6 @@ Route::post('/registracija', [UserController::class, 'registracija']);
 Route::post('/prijava', [UserController::class, 'prijava']);
 Route::post('/odjava', [UserController::class, 'odjava'])->middleware('auth:sanctum');
 
-Route::resource('tasks', TaskController::class);//->middleware('auth:sanctum');
-
-Route::get('/tasks/export/pdf', [TaskController::class, 'exportToPDF']);
-Route::post('/tasks/upload/{taskId}', [TaskController::class, 'dodajFajl']);
 
 Route::post('/forgot-password', [UserController::class, 'sendResetLink']);
 Route::post('/reset-password', [UserController::class, 'resetPassword'])->name('password.update');
@@ -47,10 +43,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/categories', [CategoryController::class, 'index']);
-    Route::get('/categories/{id}', [CategoryController::class, 'show']);
-    Route::post('/categories', [CategoryController::class, 'store']);
-    Route::put('/categories/{id}', [CategoryController::class, 'update']);
-    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
-});
+Route::resource('categories', CategoryController::class)->middleware(['auth:sanctum', 'role:member,manager,admin']);
+
+Route::resource('tasks', TaskController::class)->except([
+    'create', 'edit'
+])->middleware(['auth:sanctum', 'role:member,manager']);
+
+Route::get('/tasks/export/pdf', [TaskController::class, 'exportToPDF'])->middleware(['auth:sanctum', 'role:member,manager']);
+Route::post('/tasks/upload/{taskId}', [TaskController::class, 'dodajFajl'])->middleware(['auth:sanctum', 'role:member,manager']);
