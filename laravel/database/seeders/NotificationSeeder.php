@@ -14,7 +14,6 @@ class NotificationSeeder extends Seeder
      */
     public function run()
     {
-        // Kreiranje test podataka koristeći Faker
-        Notification::factory()->count(10)->create();
+        Notification::factory(30)->create();
     }
 }

@@ -17,21 +17,6 @@ class TaskSeeder extends Seeder
      */
     public function run()
     {
-        $faker = Factory::create();
-
-        $categories = Category::all();
-        $users = User::all();
-
-        // Kreiranje 50 zadataka
-        for ($i = 0; $i < 50; $i++) {
-            Task::create([
-                'title' => $faker->sentence(3), 
-                'description' => $faker->paragraph(),
-                'status' => $faker->randomElement(['pending', 'in_progress', 'completed']), 
-                'deadline' => $faker->dateTimeBetween('+1 week', '+1 month'), 
-                'category_id' => $faker->randomElement($categories->pluck('id')->toArray()),
-                'assigned_to' => $faker->randomElement($users->pluck('id')->toArray()),
-            ]);
-        }
+        Task::factory(20)->create();
     }
 }

@@ -24,11 +24,11 @@ class NotificationFactory extends Factory
     public function definition()
     {
         return [
-            'type' => $this->faker->randomElement(['task_assigned', 'deadline_approaching', 'general']),
-            'message' => $this->faker->sentence,
-            'user_id' => User::inRandomOrder()->first()->id ?? User::factory(),
-            'task_id' => Task::inRandomOrder()->first()->id ?? null, // Neki zapisi mogu biti null
-            'is_read' => $this->faker->boolean,
+            'type' => $this->faker->randomElement(['task_assigned', 'deadline_approaching']),
+            'message' => $this->faker->sentence(),
+            'user_id' => User::factory(),
+            'task_id' => Task::factory(),
+            'is_read' => $this->faker->boolean(),
         ];
     }
 }
