@@ -108,10 +108,8 @@ class TaskController extends Controller
 
     public function exportToPDF()
     {
-        $tasks = Task::all();
-
+        $tasks = Task::with('category')->get(); 
         $pdf = Pdf::loadView('tasks.pdf', ['tasks' => $tasks]);
-
         return $pdf->download('tasks.pdf');
     }
 

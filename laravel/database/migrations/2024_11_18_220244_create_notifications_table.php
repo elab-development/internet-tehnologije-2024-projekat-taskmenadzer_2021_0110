@@ -17,9 +17,9 @@ class CreateNotificationsTable extends Migration
             $table->id();
             $table->string('type'); // Tip notifikacije (npr. "task_assigned", "deadline_approaching")
             $table->text('message'); // Poruka notifikacije
-            $table->unsignedBigInteger('user_id'); // Korisnik kojem je namenjena notifikacija
-            $table->unsignedBigInteger('task_id')->nullable(); // Zadaci na koje se odnosi
-            $table->boolean('is_read')->default(false); // Da li je korisnik pročitao notifikaciju
+            $table->unsignedBigInteger('user_id'); 
+            $table->unsignedBigInteger('task_id')->nullable(); 
+            $table->boolean('is_read')->default(false);
             $table->timestamps();
     
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
