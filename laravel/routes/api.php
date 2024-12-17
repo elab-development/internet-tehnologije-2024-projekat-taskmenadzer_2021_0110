@@ -48,7 +48,11 @@ Route::resource('categories', CategoryController::class)->middleware(['auth:sanc
 
 Route::resource('tasks', TaskController::class)->except([
     'create', 'edit'
-])->middleware(['auth:sanctum', 'role:member,manager']);
+]);
+
+// Route::resource('tasks', TaskController::class)->except([
+//     'create', 'edit'
+// ])->middleware(['auth:sanctum', 'role:member,manager']);
 
 Route::get('/tasks/export/pdf', [TaskController::class, 'exportToPDF'])->middleware(['auth:sanctum', 'role:member,manager']);
 Route::post('/tasks/upload/{taskId}', [TaskController::class, 'dodajFajl'])->middleware(['auth:sanctum', 'role:member,manager']);
