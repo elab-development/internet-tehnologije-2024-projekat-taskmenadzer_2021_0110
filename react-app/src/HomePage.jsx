@@ -1,8 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './HomePage.css';
 import KanbanBoard from './KanbanBoard';
 
 const HomePage = () => {
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [taskData, setTaskData] = useState({
+    title: '',
+    description: '',
+    status: 'pending',
+    category_id: '',
+    assigned_to: '',
+    deadline: '',
+  });
+
+  const [users, setUsers] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    // Preuzimanje korisnika
+    fetch('/api/users', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => setUsers(data))
+      .catch((error) => console.error('Greška prilikom učitavanja korisnika:', error));
+
+    // Preuzimanje kategorija
+    fetch('/api/categories', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => setCategories(data))
+      .catch((error) => console.error('Greška prilikom učitavanja kategorija:', error));
+  }, []);
+
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setTaskData({ ...taskData, [name]: value });
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    // API poziv za kreiranje zadatka
+    fetch('/api/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`, // Dodaj autentifikaciju
+      },
+      body: JSON.stringify(taskData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.errors) {
+          alert('Greška prilikom kreiranja zadatka');
+        } else {
+          alert('Zadatak uspešno kreiran');
+          setIsModalOpen(false); // Zatvaranje modala
+        }
+      })
+      .catch((error) => console.error('Error:', error));
+  };
+
   return (
     <div className="homepage-container">
       {/* Hero sekcija */}
@@ -45,26 +111,107 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Sekcija sa prikazom Kanban boarda
-      <section className="kanban-section">
-        <h2 className="section-title">Primerni Kanban Board</h2>
-        <div className="kanban-board">
-          <div className="kanban-column">
-            <h3 className="column-title">To Do</h3>
-            <div className="kanban-item">Napravi projektni plan</div>
-            <div className="kanban-item">Pripremi dokumentaciju</div>
-          </div>
-          <div className="kanban-column">
-            <h3 className="column-title">In Progress</h3>
-            <div className="kanban-item">Razvoj korisničkog interfejsa</div>
-          </div>
-          <div className="kanban-column">
-            <h3 className="column-title">Done</h3>
-            <div className="kanban-item">Istraživanje tržišta</div>
+      <div className="kanban-controls">
+          <button onClick={() => setIsModalOpen(true)} className="add-task-button">
+            + Novi zadatak
+          </button>
+        </div>
+      <KanbanBoard />
+
+      {/* Modal za kreiranje zadatka */}
+      {isModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Kreiraj novi zadatak</h3>
+            <form onSubmit={handleFormSubmit}>
+              <label htmlFor="title">Naslov</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                placeholder="Naslov"
+                value={taskData.title}
+                onChange={handleInputChange}
+                required
+              />
+
+              <label htmlFor="description">Opis</label>
+              <textarea
+                id="description"
+                name="description"
+                placeholder="Opis"
+                value={taskData.description}
+                onChange={handleInputChange}
+              ></textarea>
+
+              <label htmlFor="status">Status</label>
+              <select
+                id="status"
+                name="status"
+                value={taskData.status}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="pending">Na čekanju</option>
+                <option value="in_progress">U toku</option>
+                <option value="completed">Završeno</option>
+              </select>
+
+              <label htmlFor="category_id">Kategorija</label>
+              <select
+                id="category_id"
+                name="category_id"
+                value={taskData.category_id}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Izaberite kategoriju</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor="assigned_to">Korisnik</label>
+              <select
+                id="assigned_to"
+                name="assigned_to"
+                value={taskData.assigned_to}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Izaberite korisnika</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor="deadline">Rok</label>
+              <input
+                type="date"
+                id="deadline"
+                name="deadline"
+                value={taskData.deadline}
+                onChange={handleInputChange}
+              />
+
+              <button type="submit" className="save-button">
+                Sačuvaj
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="cancel-button"
+              >
+                Otkaži
+              </button>
+            </form>
           </div>
         </div>
-      </section> */}
-      <KanbanBoard />
+      )}
 
       {/* Footer sekcija */}
       <footer className="footer">
