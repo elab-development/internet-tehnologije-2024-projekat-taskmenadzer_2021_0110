@@ -26,6 +26,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('/registracija', [UserController::class, 'registracija']);
 Route::post('/prijava', [UserController::class, 'prijava']);
 Route::post('/odjava', [UserController::class, 'odjava'])->middleware('auth:sanctum');
+Route::get('/users', [UserController::class, 'allUsers'])->middleware('auth:sanctum');
 
 
 Route::post('/forgot-password', [UserController::class, 'sendResetLink']);

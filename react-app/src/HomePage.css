@@ -247,3 +247,34 @@
     cursor: pointer;
   }
   
+  button-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .hero-button {
+    background: #fff;
+    color: #4f9aff;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 30px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+  
+  .hero-button:hover {
+    background: #f1f1f1;
+  }
+  
+  .register-button {
+    background: #6ec1e4;
+    color: #fff;
+  }
+  
+  .register-button:hover {
+    background: #4f9aff;
+    color: #fff;
+  }
+  

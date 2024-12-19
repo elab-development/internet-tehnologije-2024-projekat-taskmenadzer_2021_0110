@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import './HomePage.css';
 import KanbanBoard from './KanbanBoard';
+import { useNavigate } from 'react-router-dom';
+
 
 const HomePage = () => {
+  const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskData, setTaskData] = useState({
@@ -19,7 +22,7 @@ const HomePage = () => {
 
   useEffect(() => {
     // Preuzimanje korisnika
-    fetch('/api/users', {
+    fetch('http://127.0.0.1:8000/api/users', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
       },
@@ -29,7 +32,7 @@ const HomePage = () => {
       .catch((error) => console.error('Greška prilikom učitavanja korisnika:', error));
 
     // Preuzimanje kategorija
-    fetch('/api/categories', {
+    fetch('http://127.0.0.1:8000/api/categories', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
       },
@@ -77,7 +80,20 @@ const HomePage = () => {
         <p className="hero-subtitle">
           Organizujte svoje zadatke, timski rad i rokove na jednom mestu.
         </p>
-        <button className="hero-button">Prijavi se</button>
+        <div className="button-container">
+          <button
+            className="hero-button"
+            onClick={() => navigate('/prijava')}
+          >
+            Prijavi se
+          </button>
+          <button
+            className="hero-button register-button"
+            onClick={() => navigate('/registracija')}
+          >
+            Registruj se
+          </button>
+        </div>
       </header>
 
       {/* Sekcija sa objašnjenjem funkcionalnosti */}

@@ -120,4 +120,10 @@ class UserController extends Controller
 
         return response()->json(['message' => __($status)], 500);
     }
+
+    public function allUsers()
+    {
+        $users = User::all(); 
+        return response()->json($users, 200);
+    }
 }

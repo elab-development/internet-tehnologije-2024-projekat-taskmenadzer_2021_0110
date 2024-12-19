@@ -1,12 +1,18 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './HomePage';
-import KanbanBoard from './KanbanBoard';
+import Prijava from './Prijava';
+import Registracija from './Registracija';
 
 function App() {
   return (
-    <div>
-      <HomePage />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/prijava" element={<Prijava />} />
+        <Route path="/registracija" element={<Registracija />} />
+      </Routes>
+    </Router>
   );
 }
 
