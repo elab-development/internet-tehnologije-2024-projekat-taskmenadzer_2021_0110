@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import './AuthPage.css';
+import { useNavigate } from 'react-router-dom';
 
-const Registracija = () => {
+const Registracija = ({ onLogin }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     password_confirmation: '',
   });
+
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,6 +34,11 @@ const Registracija = () => {
         } else {
           alert('Registration successful');
         }
+
+        localStorage.setItem('auth_token', data.token);
+        onLogin();
+        navigate('/');
+
       })
       .catch((error) => console.error('Error:', error));
   };

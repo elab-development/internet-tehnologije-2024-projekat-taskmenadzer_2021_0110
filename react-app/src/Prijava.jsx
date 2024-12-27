@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import './AuthPage.css';
+import { useNavigate } from 'react-router-dom';
 
 const Prijava = ({ onLogin }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+
+  const navigate = useNavigate();
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -34,6 +38,8 @@ const Prijava = ({ onLogin }) => {
         .then((data) => {
           console.log('Login successful:', data);
           localStorage.setItem('auth_token', data.token);
+          onLogin();
+          navigate('/');
         })
         .catch((error) => {
           console.error('There was a problem with the fetch operation:', error);

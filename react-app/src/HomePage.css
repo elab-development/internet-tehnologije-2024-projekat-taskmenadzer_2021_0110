@@ -17,8 +17,13 @@
   .hero-section {
     background: linear-gradient(to right, #4f9aff, #6ec1e4);
     padding: 80px 20px;
+    display: flex; /* Aktivira flexbox */
+    flex-direction: column; /* Poravnanje elemenata u koloni */
+    justify-content: center; /* Vertikalno centriranje */
+    align-items: center; /* Horizontalno centriranje */
     text-align: center;
     color: #fff;
+    min-height: 100vh;
     animation: fadeInDown 1.5s ease;
   }
   
