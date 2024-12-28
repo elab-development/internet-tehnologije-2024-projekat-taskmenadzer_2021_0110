@@ -1,7 +1,32 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 function NavigationMenu({ isLoggedIn, handleLogout }) {
+  const navigate = useNavigate();
+
+  const handleLogoutClick = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/odjava', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      });
+
+      if (response.ok) {
+        handleLogout();
+        navigate('/'); 
+        alert('Uspešno ste se odjavili.');
+      } else {
+        alert('Greška prilikom odjave. Pokušajte ponovo.');
+      }
+    } catch (error) {
+      console.error('Greška prilikom slanja zahteva za odjavu:', error);
+      alert('Greška prilikom odjave. Pokušajte ponovo.');
+    }
+  };
+
   return (
     <nav style={styles.navbar}>
       <NavLink
@@ -19,7 +44,7 @@ function NavigationMenu({ isLoggedIn, handleLogout }) {
           >
             Taskovi
           </NavLink>
-          <button onClick={handleLogout} style={styles.logoutButton}>
+          <button onClick={handleLogoutClick} style={styles.logoutButton}>
             Odjavi se
           </button>
         </>

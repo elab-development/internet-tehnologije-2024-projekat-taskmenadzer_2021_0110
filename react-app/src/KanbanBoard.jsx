@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './KanbanBoard.css';
+import Task from './Task'; 
+import { useNavigate } from 'react-router-dom';
 
 const KanbanBoard = () => {
   const [tasks, setTasks] = useState([]);
@@ -8,6 +10,7 @@ const KanbanBoard = () => {
   const [isEditing, setIsEditing] = useState(false); // Razlikovanje kreiranja i izmene
   const [selectedTask, setSelectedTask] = useState(null); // Za trenutno izabrani task
   const [role, setRole] = useState(null);
+  const navigate = useNavigate(); 
   
   const [taskData, setTaskData] = useState({
     title: '',
@@ -82,6 +85,14 @@ const KanbanBoard = () => {
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState([]);
   useEffect(() => {
+    const authToken = localStorage.getItem('auth_token');
+    if (!authToken) {
+      // Ako auth_token ne postoji, preusmeri korisnika na stranicu za prijavu
+      alert('Morate biti prijavljeni da biste videli ovu stranicu.');
+      navigate('/prijava'); 
+      return;
+    }
+
     const userRole = localStorage.getItem('user_role'); 
     setRole(userRole);
     
@@ -112,7 +123,7 @@ const KanbanBoard = () => {
       .then((response) => response.json())
       .then((data) => setCategories(data))
       .catch((error) => console.error('Greška prilikom učitavanja kategorija:', error));
-  }, []);
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -262,15 +273,12 @@ const KanbanBoard = () => {
                       index={index}
                     >
                       {(provided) => (
-                        <div
-                          className="kanban-item"
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          onMouseUp={() => openEditTaskModal(task)}
-                          >
-                          <p>{task.title}</p>
-                        </div>
+                        <Task
+                          task={task}
+                          index={index}
+                          onEdit={openEditTaskModal}
+                          provided={provided}
+                        />
                       )}
                     </Draggable>
                   ))}
