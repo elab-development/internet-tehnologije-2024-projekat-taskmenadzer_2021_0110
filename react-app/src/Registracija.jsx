@@ -36,6 +36,7 @@ const Registracija = ({ onLogin }) => {
         }
 
         localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('user_role', data.user.role); 
         onLogin();
         navigate('/');
 

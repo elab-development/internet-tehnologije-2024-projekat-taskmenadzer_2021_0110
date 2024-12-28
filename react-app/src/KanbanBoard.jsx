@@ -5,6 +5,10 @@ import './KanbanBoard.css';
 const KanbanBoard = () => {
   const [tasks, setTasks] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // Razlikovanje kreiranja i izmene
+  const [selectedTask, setSelectedTask] = useState(null); // Za trenutno izabrani task
+  const [role, setRole] = useState(null);
+  
   const [taskData, setTaskData] = useState({
     title: '',
     description: '',
@@ -14,15 +18,78 @@ const KanbanBoard = () => {
     deadline: '',
   });
 
+  const handleDeleteTask = () => {
+    if (window.confirm('Da li ste sigurni da želite da obrišete ovaj zadatak?')) {
+      fetch(`http://localhost:8000/api/tasks/${taskData.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
+        .then((response) => {
+          if (response.ok) {
+            setTasks((prevTasks) =>
+              prevTasks.filter((task) => task.id !== taskData.id)
+            );
+            alert('Zadatak je uspešno obrisan.');
+            setIsModalOpen(false);
+          } else {
+            alert('Greška prilikom brisanja zadatka.');
+          }
+        })
+        .catch((error) => console.error('Error deleting task:', error));
+    }
+  };
+
+  const openAddTaskModal = () => {
+    setTaskData({
+      title: '',
+      description: '',
+      status: 'pending',
+      category_id: '',
+      assigned_to: '',
+      deadline: '',
+    });
+    setIsEditing(false);
+    setIsModalOpen(true);
+  };
+
+  const openEditTaskModal = (task) => {
+    if (role === 'manager') {
+      const assignedUser = users.find((user) => user.id === task.assigned_to);
+      setTaskData({
+        ...task,
+        category_id: task.category_id || '',
+        assigned_to: assignedUser ? assignedUser.id : '', // Postavi id korisnika ako postoji
+      });
+      setIsEditing(true);
+      setIsModalOpen(true);
+    } else {
+      alert('Nemate dozvolu za izmenu zadataka.');
+    }
+  };
+
+  const handleTaskClick = (task) => {
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleModalInputChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedTask((prevTask) => ({ ...prevTask, [name]: value }));
+  };
+
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState([]);
-  // Load tasks from the server
   useEffect(() => {
-    fetch('http://localhost:8000/api/tasks')
+    const userRole = localStorage.getItem('user_role'); 
+    setRole(userRole);
+    
+    fetch('http://localhost:8000/api/tasks?per_page=70')
       .then((response) => response.json())
       .then((data) => {
         console.log('Tasks loaded:', data.data);
-        setTasks(data.data || []); // Ensure it's an array
+        setTasks(data.data || []); // Da se osiguramo da je niz
       })
       .catch((error) => console.error('Error loading tasks:', error));
 
@@ -54,26 +121,76 @@ const KanbanBoard = () => {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    if (isEditing) {
+      // Izmena postojećeg zadatka
+      fetch(`http://localhost:8000/api/tasks/${taskData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData),
+      })
+        .then((response) => response.json())
+        .then((updatedTask) => {
+          setTasks((prevTasks) =>
+            prevTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
+          );
+          setIsModalOpen(false);
+        })
+        .catch((error) => console.error('Error saving task:', error));
+    } else {
+      // Kreiranje novog zadatka
+      fetch('http://localhost:8000/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify(taskData),
+      })
+        .then((response) => response.json())
+        .then((newTask) => {
+          if (newTask.errors) {
+            alert('Greška prilikom kreiranja zadatka');
+          } else {
+            alert('Zadatak uspešno kreiran');
+            const completeTask = {
+              ...newTask,
+              category_id: newTask.category_id || taskData.category_id,
+              assigned_to: newTask.assigned_to || taskData.assigned_to,
+            };
+  
+            // Povezivanje korisnika sa `assigned_to`
+            if (completeTask.assigned_to) {
+              const assignedUser = users.find(
+                (user) => user.id === completeTask.assigned_to
+              );
+              if (assignedUser) {
+                completeTask.assigned_to = assignedUser.id; // Samo `id` za konzistentnost
+              }
+            }
+  
+            setTasks((prevTasks) => [...prevTasks, completeTask]);
+            setIsModalOpen(false);
+          }
+        })
+        .catch((error) => console.error('Error:', error));
+    }
+  };
 
-    // API poziv za kreiranje zadatka
-    fetch('/api/tasks', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('auth_token')}`, // Dodaj autentifikaciju
-      },
-      body: JSON.stringify(taskData),
+
+  const handleModalSave = () => {
+    fetch(`http://localhost:8000/api/tasks/${selectedTask.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(selectedTask),
     })
       .then((response) => response.json())
-      .then((data) => {
-        if (data.errors) {
-          alert('Greška prilikom kreiranja zadatka');
-        } else {
-          alert('Zadatak uspešno kreiran');
-          setIsModalOpen(false); // Zatvaranje modala
-        }
+      .then(() => {
+        setTasks((prevTasks) =>
+          prevTasks.map((task) => (task.id === selectedTask.id ? selectedTask : task))
+        );
+        setIsModalOpen(false);
       })
-      .catch((error) => console.error('Error:', error));
+      .catch((error) => console.error('Error saving task:', error));
   };
 
   const statuses = ['pending', 'in_progress', 'completed']; 
@@ -119,6 +236,11 @@ const KanbanBoard = () => {
 
   return (
     <div>
+          {role === 'manager' && (
+        <button className="modern-add-task-button" onClick={openAddTaskModal}>
+          + Dodaj task
+        </button>
+      )}
 
 <DragDropContext onDragEnd={handleDragEnd}>
       <div className="kanban-board">
@@ -145,7 +267,8 @@ const KanbanBoard = () => {
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                        >
+                          onMouseUp={() => openEditTaskModal(task)}
+                          >
                           <p>{task.title}</p>
                         </div>
                       )}
@@ -160,38 +283,28 @@ const KanbanBoard = () => {
       </div>
     </DragDropContext>
 
-<div className="kanban-controls">
-          <button onClick={() => setIsModalOpen(true)} className="add-task-button">
-            + Novi zadatak
-          </button>
-        </div>
-
       {/* Modal za kreiranje zadatka */}
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
-            <h3>Kreiraj novi zadatak</h3>
+            <h3>{isEditing ? 'Izmeni zadatak' : 'Kreiraj novi zadatak'}</h3>
             <form onSubmit={handleFormSubmit}>
               <label htmlFor="title">Naslov</label>
               <input
                 type="text"
                 id="title"
                 name="title"
-                placeholder="Naslov"
                 value={taskData.title}
                 onChange={handleInputChange}
                 required
               />
-
               <label htmlFor="description">Opis</label>
               <textarea
                 id="description"
                 name="description"
-                placeholder="Opis"
                 value={taskData.description}
                 onChange={handleInputChange}
               ></textarea>
-
               <label htmlFor="status">Status</label>
               <select
                 id="status"
@@ -204,7 +317,6 @@ const KanbanBoard = () => {
                 <option value="in_progress">U toku</option>
                 <option value="completed">Završeno</option>
               </select>
-
               <label htmlFor="category_id">Kategorija</label>
               <select
                 id="category_id"
@@ -220,23 +332,21 @@ const KanbanBoard = () => {
                   </option>
                 ))}
               </select>
-
               <label htmlFor="assigned_to">Korisnik</label>
-              <select
-                id="assigned_to"
-                name="assigned_to"
-                value={taskData.assigned_to}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Izaberite korisnika</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
-
+            <select
+              id="assigned_to"
+              name="assigned_to"
+              value={taskData.assigned_to}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="">Izaberite korisnika</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
               <label htmlFor="deadline">Rok</label>
               <input
                 type="date"
@@ -245,10 +355,10 @@ const KanbanBoard = () => {
                 value={taskData.deadline}
                 onChange={handleInputChange}
               />
-
               <button type="submit" className="save-button">
-                Sačuvaj
+                {isEditing ? 'Sačuvaj izmene' : 'Kreiraj'}
               </button>
+              
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
@@ -256,6 +366,16 @@ const KanbanBoard = () => {
               >
                 Otkaži
               </button>
+
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={handleDeleteTask}
+                  className="delete-button"
+                >
+                  Obriši
+                </button>
+              )}
             </form>
           </div>
         </div>

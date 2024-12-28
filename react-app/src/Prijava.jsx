@@ -38,6 +38,7 @@ const Prijava = ({ onLogin }) => {
         .then((data) => {
           console.log('Login successful:', data);
           localStorage.setItem('auth_token', data.token);
+          localStorage.setItem('user_role', data.user.role); 
           onLogin();
           navigate('/');
         })
