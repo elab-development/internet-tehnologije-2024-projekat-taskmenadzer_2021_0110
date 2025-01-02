@@ -49,18 +49,14 @@ Route::resource('categories', CategoryController::class)->middleware(['auth:sanc
 
 Route::resource('tasks', TaskController::class)->except([
     'create', 'edit'
-]);
-
-// Route::resource('tasks', TaskController::class)->except([
-//     'create', 'edit'
-// ])->middleware(['auth:sanctum', 'role:member,manager']);
+])->middleware(['auth:sanctum', 'role:member,manager']);
 
 Route::get('/tasks/export/pdf', [TaskController::class, 'exportToPDF'])->middleware(['auth:sanctum', 'role:member,manager']);
 Route::post('/tasks/upload/{taskId}', [TaskController::class, 'dodajFajl'])->middleware(['auth:sanctum', 'role:member,manager']);
 
-Route::get('/holidays', function () {
+Route::get('/holidays', function (Request $request) {
     $country = 'RS'; // ISO kod Srbije
-    $year = now()->year;
+    $year = $request->input('year', now()->year); // Preuzmi godinu iz zahteva ili koristi trenutnu godinu kao podrazumevanu
 
     $response = Http::get("https://date.nager.at/api/v3/PublicHolidays/$year/$country");
 

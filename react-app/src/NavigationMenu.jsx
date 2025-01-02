@@ -44,6 +44,12 @@ function NavigationMenu({ isLoggedIn, handleLogout }) {
           >
             Taskovi
           </NavLink>
+          <NavLink
+            to="/kalendar"
+            style={({ isActive }) => (isActive ? styles.activeLink : styles.link)}
+          >
+            Kalendar
+          </NavLink>
           <button onClick={handleLogoutClick} style={styles.logoutButton}>
             Odjavi se
           </button>

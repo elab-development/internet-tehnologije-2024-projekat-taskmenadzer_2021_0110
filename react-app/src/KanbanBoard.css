@@ -65,3 +65,56 @@
   .delete-button:hover {
     background-color: #c9302c;
   }
+
+  .kanban-controls {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .search-form {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .search-form input,
+  .search-form select {
+    padding: 5px;
+    font-size: 14px;
+  }
+  
+  .search-form button {
+    padding: 5px 10px;
+    font-size: 14px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+  .upload-button {
+    background-color: #007bff; /* Plava boja */
+    color: white; /* Bela boja teksta */
+    border: none; /* Bez ivica */
+    border-radius: 5px; /* Zaobljeni uglovi */
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    font-size: 16px; /* Veličina fonta */
+    cursor: pointer; /* Promena kursora na hover */
+    transition: background-color 0.3s ease; /* Animacija za hover */
+  }
+  
+  .upload-button:hover {
+    background-color: #0056b3; /* Tamnija plava na hover */
+  }
+  
+  .upload-button:active {
+    background-color: #004085; /* Još tamnija plava kada je kliknuto */
+  }
+  
+  .upload-button:disabled {
+    background-color: #cccccc; /* Siva boja za onemogućeno dugme */
+    cursor: not-allowed; /* Kursor koji pokazuje da je dugme onemogućeno */
+  }
+  

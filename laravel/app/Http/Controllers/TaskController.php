@@ -17,25 +17,32 @@ class TaskController extends Controller
     {
         $query = Task::query();
 
+        $query->with('files');
+
         // Filtriranje po naslovu (title)
         if ($request->has('title')) {
             $query->where('title', 'like', '%' . $request->input('title') . '%');
         }
 
         // Filtriranje po statusu
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
 
         // Filtriranje po kategoriji (category_id)
-        if ($request->has('category_id')) {
+        if ($request->filled('category_id')) {
             $query->where('category_id', $request->input('category_id'));
+        }
+
+        if ($request->has('month') && $request->has('year')) {
+            $query->whereYear('deadline', $request->input('year'))
+                  ->whereMonth('deadline', $request->input('month'));
         }
 
         // Dodavanje paginacije
         $tasks = $query->paginate($request->input('per_page', 10)); // Default 10 stavki po stranici
 
-        return response()->json($tasks);
+        return TaskResource::collection($tasks);
     }
 
     /**

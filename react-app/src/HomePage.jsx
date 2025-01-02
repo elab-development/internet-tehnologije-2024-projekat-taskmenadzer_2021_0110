@@ -10,7 +10,7 @@ const HomePage = ({ isLoggedIn }) => {
     <div className="homepage-container">
       {/* Hero sekcija */}
       <header className="hero-section">
-        <h1 className="hero-title">Task Management Aplikacija</h1>
+        <h1 className="hero-title">Task management aplikacija</h1>
         <p className="hero-subtitle">
           Organizujte svoje zadatke, timski rad i rokove na jednom mestu.
         </p>

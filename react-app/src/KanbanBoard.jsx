@@ -11,6 +11,14 @@ const KanbanBoard = () => {
   const [selectedTask, setSelectedTask] = useState(null); // Za trenutno izabrani task
   const [role, setRole] = useState(null);
   const navigate = useNavigate(); 
+  const [searchParams, setSearchParams] = useState({
+    title: '',
+    status: '',
+    category_id: '',
+  }); // Dodato za pretragu
+
+  const [file, setFile] = useState(null);
+
   
   const [taskData, setTaskData] = useState({
     title: '',
@@ -59,14 +67,24 @@ const KanbanBoard = () => {
 
   const openEditTaskModal = (task) => {
     if (role === 'manager') {
-      const assignedUser = users.find((user) => user.id === task.assigned_to);
-      setTaskData({
-        ...task,
-        category_id: task.category_id || '',
-        assigned_to: assignedUser ? assignedUser.id : '', // Postavi id korisnika ako postoji
-      });
-      setIsEditing(true);
-      setIsModalOpen(true);
+      const updatedTask = tasks.find((t) => t.id === task.id);
+      console.log(updatedTask)
+      
+      if (updatedTask) {
+        setTaskData({
+          id: updatedTask.id,
+          title: updatedTask.title || '',
+          description: updatedTask.description || '',
+          status: updatedTask.status || 'pending',
+          category_id: updatedTask.category_id || '',
+          assigned_to: updatedTask.assigned_to || '',
+          deadline: updatedTask.deadline || '',
+        });
+        setIsEditing(true);
+        setIsModalOpen(true);
+      } else {
+        alert('Zadatak nije pronađen u listi.');
+      }
     } else {
       alert('Nemate dozvolu za izmenu zadataka.');
     }
@@ -84,107 +102,181 @@ const KanbanBoard = () => {
 
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState([]);
+
   useEffect(() => {
     const authToken = localStorage.getItem('auth_token');
     if (!authToken) {
-      // Ako auth_token ne postoji, preusmeri korisnika na stranicu za prijavu
       alert('Morate biti prijavljeni da biste videli ovu stranicu.');
-      navigate('/prijava'); 
+      navigate('/prijava');
       return;
     }
-
-    const userRole = localStorage.getItem('user_role'); 
+  
+    const userRole = localStorage.getItem('user_role');
     setRole(userRole);
+  
+    // Učitaj korisnike i zadatke samo jednom
+    if (users.length === 0 && tasks.length === 0) {
+      const fetchUsers = fetch('http://127.0.0.1:8000/api/users', {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }).then((response) => response.json());
+  
+      const fetchTasks = fetch('http://localhost:8000/api/tasks?per_page=70', {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }).then((response) => response.json());
+  
+      Promise.all([fetchUsers, fetchTasks])
+      .then(([usersData, tasksData]) => {
+        setUsers(usersData);
     
-    fetch('http://localhost:8000/api/tasks?per_page=70')
-      .then((response) => response.json())
-      .then((data) => {
-        console.log('Tasks loaded:', data.data);
-        setTasks(data.data || []); // Da se osiguramo da je niz
+        const enrichedTasks = tasksData.data.map((task) => {
+          const assignedUser = usersData.find((user) => user.id === task.assigned_to);
+          const category = categories.find((cat) => cat.id === task.category_id); // Pronađi odgovarajuću kategoriju
+    
+          return {
+            ...task,
+            assigned_to_name: assignedUser
+              ? `${assignedUser.name || ''} ${assignedUser.surname || ''}`.trim()
+              : 'Nije dodeljeno',
+            category: category ? category.name : 'Bez kategorije', // Dodaj naziv kategorije
+          };
+        });
+    
+        setTasks(enrichedTasks);
       })
-      .catch((error) => console.error('Error loading tasks:', error));
-
-      // Preuzimanje korisnika
-    fetch('http://127.0.0.1:8000/api/users', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => setUsers(data))
-      .catch((error) => console.error('Greška prilikom učitavanja korisnika:', error));
-
+      .catch((error) => console.error('Greška prilikom učitavanja podataka:', error));
+    }
+  
     // Preuzimanje kategorija
-    fetch('http://127.0.0.1:8000/api/categories', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => setCategories(data))
-      .catch((error) => console.error('Greška prilikom učitavanja kategorija:', error));
-  }, [navigate]);
+    if (categories.length === 0) {
+      fetch('http://127.0.0.1:8000/api/categories', {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => setCategories(data))
+        .catch((error) => console.error('Greška prilikom učitavanja kategorija:', error));
+    }
+  }, [navigate, users.length, tasks.length, categories.length,isModalOpen]);
+
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setTaskData({ ...taskData, [name]: value });
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFileUpload = async (e) => {
     e.preventDefault();
-    if (isEditing) {
-      // Izmena postojećeg zadatka
-      fetch(`http://localhost:8000/api/tasks/${taskData.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(taskData),
-      })
-        .then((response) => response.json())
-        .then((updatedTask) => {
-          setTasks((prevTasks) =>
-            prevTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
-          );
-          setIsModalOpen(false);
-        })
-        .catch((error) => console.error('Error saving task:', error));
-    } else {
-      // Kreiranje novog zadatka
-      fetch('http://localhost:8000/api/tasks', {
+  
+    if (!file) {
+      alert('Molimo izaberite fajl pre otpremanja.');
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append('file', file);
+  
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/tasks/upload/${taskData.id}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`, 
         },
-        body: JSON.stringify(taskData),
-      })
-        .then((response) => response.json())
-        .then((newTask) => {
-          if (newTask.errors) {
-            alert('Greška prilikom kreiranja zadatka');
-          } else {
-            alert('Zadatak uspešno kreiran');
-            const completeTask = {
-              ...newTask,
-              category_id: newTask.category_id || taskData.category_id,
-              assigned_to: newTask.assigned_to || taskData.assigned_to,
-            };
+        body: formData,
+      });
   
-            // Povezivanje korisnika sa `assigned_to`
-            if (completeTask.assigned_to) {
-              const assignedUser = users.find(
-                (user) => user.id === completeTask.assigned_to
-              );
-              if (assignedUser) {
-                completeTask.assigned_to = assignedUser.id; // Samo `id` za konzistentnost
-              }
-            }
-  
-            setTasks((prevTasks) => [...prevTasks, completeTask]);
-            setIsModalOpen(false);
-          }
-        })
-        .catch((error) => console.error('Error:', error));
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Uploaded file:', data.file);
+        window.location.reload();
+        // Opciono: osveži listu fajlova zadatka ili uradi neku drugu akciju
+      } else {
+        const errorData = await response.json();
+        alert(`Greška: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Greška prilikom otpremanja fajla:', error);
+      alert('Došlo je do greške prilikom otpremanja fajla.');
     }
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+  
+    const formData = new FormData();
+    formData.append('title', taskData.title);
+    formData.append('description', taskData.description);
+    formData.append('status', taskData.status);
+    formData.append('category_id', taskData.category_id);
+    formData.append('assigned_to', taskData.assigned_to);
+    formData.append('deadline', taskData.deadline);
+  
+    if (file) {
+      formData.append('file', file);
+    }
+  
+    const url = isEditing
+      ? `http://localhost:8000/api/tasks/${taskData.id}`
+      : 'http://localhost:8000/api/tasks';
+  
+    const method = isEditing ? 'PUT' : 'POST';
+  
+    fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+      },
+      body: JSON.stringify({
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status,
+        category_id: taskData.category_id,
+        assigned_to: taskData.assigned_to,
+        deadline: taskData.deadline,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.errors) {
+          alert('Greška prilikom čuvanja zadatka');
+        } else {
+          alert(isEditing ? 'Zadatak uspešno izmenjen' : 'Zadatak uspešno kreiran');
+          setTasks((prevTasks) => {
+            if (isEditing) {
+              // Zameni postojeći zadatak u listi
+              return prevTasks.map((task) =>
+                task.id === data.id ? { ...task, ...data } : task
+              );
+            } else {
+              // Dodaj novi zadatak u listu
+              return [...prevTasks, data];
+            }
+          });
+          console.log("LINIJA225")
+          console.log(data)
+          // Ažuriraj `taskData` kako bi se prikazao tačan sadržaj u modal-u
+          if (isEditing) {
+            setTaskData({
+              id: data.id,
+              title: data.title,
+              description: data.description,
+              status: data.status,
+              category_id: Number(data.category_id),
+              assigned_to: data.user_id,
+              deadline: data.deadline,
+            });
+          }
+          window.location.reload();
+          setIsModalOpen(false);
+        }
+      })
+      .catch((error) => console.error('Error:', error));
   };
 
 
@@ -245,13 +337,78 @@ const KanbanBoard = () => {
     .catch((error) => console.error('Error updating task:', error));
   };
 
+  const handleSearchChange = (e) => {
+    const { name, value } = e.target;
+    setSearchParams((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    fetchTasks();
+  };
+
+  const fetchTasks = () => {
+    const queryParams = new URLSearchParams(searchParams).toString();
+    fetch(`http://localhost:8000/api/tasks?${queryParams}&per_page=70`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Fetched tasks:', data);
+        if (data && data.data) {
+          setTasks(data.data); // Uverite se da je ovo niz
+        }
+      })
+      .catch((error) => console.error('Error fetching tasks:', error));
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
   return (
     <div>
-          {role === 'manager' && (
+         
+      <div className="kanban-controls">
+        <form className="search-form" onSubmit={handleSearchSubmit}>
+          <input
+            type="text"
+            name="title"
+            placeholder="Pretraga po naslovu"
+            value={searchParams.title}
+            onChange={handleSearchChange}
+          />
+          <select
+            name="status"
+            value={searchParams.status}
+            onChange={handleSearchChange}
+          >
+            <option value="">Sve</option>
+            <option value="pending">Na čekanju</option>
+            <option value="in_progress">U toku</option>
+            <option value="completed">Završeno</option>
+          </select>
+          <select
+            name="category_id"
+            value={searchParams.category_id}
+            onChange={handleSearchChange}
+          >
+            <option value="">Sve kategorije</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <button type="submit">Pretraži</button>
+        </form>
+        {role === 'manager' && (
         <button className="modern-add-task-button" onClick={openAddTaskModal}>
           + Dodaj task
         </button>
       )}
+      </div>
 
 <DragDropContext onDragEnd={handleDragEnd}>
       <div className="kanban-board">
@@ -296,7 +453,7 @@ const KanbanBoard = () => {
         <div className="modal">
           <div className="modal-content">
             <h3>{isEditing ? 'Izmeni zadatak' : 'Kreiraj novi zadatak'}</h3>
-            <form onSubmit={handleFormSubmit}>
+            <form onSubmit={handleFormSubmit} encType="multipart/form-data">
               <label htmlFor="title">Naslov</label>
               <input
                 type="text"
@@ -363,6 +520,18 @@ const KanbanBoard = () => {
                 value={taskData.deadline}
                 onChange={handleInputChange}
               />
+              <form encType="multipart/form-data">
+                <label htmlFor="file">Dodaj fajl</label>
+                <input
+                  type="file"
+                  id="file"
+                  name="file"
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+                <button type="button" onClick={handleFileUpload} className="upload-button">
+                  Otpremi fajl
+                </button>
+              </form>
               <button type="submit" className="save-button">
                 {isEditing ? 'Sačuvaj izmene' : 'Kreiraj'}
               </button>

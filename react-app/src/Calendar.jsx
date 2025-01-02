@@ -10,14 +10,14 @@ const Calendar = () => {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token'); // Preuzimanje tokena iz localStorage
+    const token = localStorage.getItem('auth_token'); 
   
     // Fetch holidays
-    fetch(`http://localhost:8000/api/holidays`, {
+    fetch(`http://localhost:8000/api/holidays?year=${currentYear}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // Dodavanje tokena za autentifikaciju
+        Authorization: `Bearer ${token}`, 
       },
     })
       .then((response) => {
@@ -33,11 +33,11 @@ const Calendar = () => {
       .catch((error) => console.error('Error fetching holidays:', error));
   
     // Fetch tasks
-    fetch(`http://localhost:8000/api/tasks?per_page=100`, {
+    fetch(`http://localhost:8000/api/tasks?month=${currentMonth + 1}&year=${currentYear}&per_page=100`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // Dodavanje tokena za autentifikaciju
+        Authorization: `Bearer ${token}`, 
       },
     })
       .then((response) => {
