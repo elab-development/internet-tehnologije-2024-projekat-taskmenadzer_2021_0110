@@ -6,6 +6,7 @@ import Registracija from './Registracija';
 import NavigationMenu from './NavigationMenu';
 import KanbanBoard from './KanbanBoard';
 import Calendar from './Calendar';
+import Breadcrumb from './Breadcrumb';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -30,6 +31,7 @@ function App() {
   return (
     <Router>
       <NavigationMenu isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
+      <Breadcrumb />
       <Routes>
         <Route path="/" element={<HomePage isLoggedIn={isLoggedIn} />} />
         <Route path="/taskovi" element={<KanbanBoard />} />
