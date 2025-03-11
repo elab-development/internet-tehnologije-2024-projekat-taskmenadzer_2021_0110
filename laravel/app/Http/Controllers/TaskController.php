@@ -6,9 +6,12 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\TaskResource;
+use App\Mail\TaskNotificationMail;
 use App\Models\Category;
 use App\Models\TaskFile;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
@@ -75,6 +78,11 @@ class TaskController extends Controller
     
         // Kreiranje zadatka sa prosleđenim podacima
         $task = Task::create($request->all());
+
+        Mail::to(User::find($task->assigned_to)->email)->send(new TaskNotificationMail(
+            "Novi zadatak: {$task->title}",
+            "Dodeljen vam je novi zadatak: {$task->title}. Opis: {$task->description}."
+        ));
     
         return response()->json(new TaskResource($task), 201);
     }
@@ -98,7 +106,47 @@ class TaskController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Čuvamo stare vrednosti pre ažuriranja
+        $oldValues = $task->getOriginal();
+
+        // Pronalazimo imena starih i novih korisnika
+        $oldAssignedUser = User::find($oldValues['assigned_to']);
+        $newAssignedUser = User::find($request->assigned_to);
+
+        // Ažuriramo zadatak sa novim podacima
         $task->update($request->all());
+
+        // Pronalazimo korisnika kome je zadatak dodeljen (ako postoji)
+        $assignedUser = User::find($task->assigned_to);
+        if (!$assignedUser) {
+            return response()->json(['error' => 'Nema dodeljenog korisnika'], 404);
+        }
+
+        // Pravimo poruku sa izmenjenim poljima
+        $changes = [];
+        foreach ($request->all() as $key => $value) {
+            if ($oldValues[$key] != $value) {
+                if ($key === 'assigned_to') {
+                    // Menjamo prikaz ID-a u imena korisnika
+                    $oldName = $oldAssignedUser ? $oldAssignedUser->name : 'Nije dodeljeno';
+                    $newName = $newAssignedUser ? $newAssignedUser->name : 'Nije dodeljeno';
+                    $changes[] = "Dodeljeno korisniku: {$oldName} ➝ {$newName}";
+                } else {
+                    $changes[] = ucfirst(str_replace('_', ' ', $key)) . ": {$oldValues[$key]} ➝ {$value}";
+                }
+            }
+        }
+
+        if (empty($changes)) {
+            return response()->json(new TaskResource($task), 200);
+        }
+
+        $message = "Zadatak '{$task->title}' je ažuriran.\n\nPromene:\n" . implode("\n", $changes);
+
+        Mail::to($assignedUser->email)->send(new TaskNotificationMail(
+            "Izmenjen zadatak: {$task->title}",
+            $message
+        ));
 
         return response()->json(new TaskResource($task), 200);
     }
@@ -110,6 +158,11 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
         $task->delete();
+
+        Mail::to(User::find($task->assigned_to)->email)->send(new TaskNotificationMail(
+            "Obrisan zadatak: {$task->title}",
+            "Zadatak '{$task->title}' je obrisan."
+        ));
 
         return response()->json(['message' => 'Task deleted successfully'], 200);
     }
@@ -138,6 +191,11 @@ class TaskController extends Controller
                 'file_path' => $path,
                 'file_name' => $file->getClientOriginalName(),
             ]);
+
+            Mail::to(User::find($task->assigned_to)->email)->send(new TaskNotificationMail(
+                "Novi fajl za zadatak: {$task->title}",
+                "Dodat je novi fajl '{$file->getClientOriginalName()}' za zadatak '{$task->title}'."
+            ));
     
             return response()->json([
                 'message' => 'Fajl uspešno otpremljen i povezan sa zadatkom!',
