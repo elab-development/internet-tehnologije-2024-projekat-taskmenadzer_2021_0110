@@ -126,4 +126,18 @@ class UserController extends Controller
         $users = User::all(); 
         return response()->json($users, 200);
     }
+
+    public function updateUserRole(Request $request, $id)
+    {
+        $request->validate([
+            'role' => 'required|in:admin,manager,member',
+        ]);
+
+        $user = User::findOrFail($id);
+        $user->role = $request->role;
+        $user->save();
+
+        return response()->json(['message' => 'User role updated successfully']);
+    }
+
 }

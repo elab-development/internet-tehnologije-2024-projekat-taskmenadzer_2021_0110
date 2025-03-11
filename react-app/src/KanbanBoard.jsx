@@ -7,15 +7,15 @@ import { useNavigate } from 'react-router-dom';
 const KanbanBoard = () => {
   const [tasks, setTasks] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // Razlikovanje kreiranja i izmene
-  const [selectedTask, setSelectedTask] = useState(null); // Za trenutno izabrani task
+  const [isEditing, setIsEditing] = useState(false); 
+  const [selectedTask, setSelectedTask] = useState(null); 
   const [role, setRole] = useState(null);
   const navigate = useNavigate(); 
   const [searchParams, setSearchParams] = useState({
     title: '',
     status: '',
     category_id: '',
-  }); // Dodato za pretragu
+  });
 
   const [file, setFile] = useState(null);
 
@@ -134,14 +134,14 @@ const KanbanBoard = () => {
     
         const enrichedTasks = tasksData.data.map((task) => {
           const assignedUser = usersData.find((user) => user.id === task.assigned_to);
-          const category = categories.find((cat) => cat.id === task.category_id); // Pronađi odgovarajuću kategoriju
+          const category = categories.find((cat) => cat.id === task.category_id); 
     
           return {
             ...task,
             assigned_to_name: assignedUser
               ? `${assignedUser.name || ''} ${assignedUser.surname || ''}`.trim()
               : 'Nije dodeljeno',
-            category: category ? category.name : 'Bez kategorije', // Dodaj naziv kategorije
+            category: category ? category.name : 'Bez kategorije', 
           };
         });
     

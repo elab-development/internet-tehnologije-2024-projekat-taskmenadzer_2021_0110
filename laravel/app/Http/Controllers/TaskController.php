@@ -6,6 +6,7 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\TaskResource;
+use App\Models\Category;
 use App\Models\TaskFile;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
@@ -145,5 +146,28 @@ class TaskController extends Controller
         }
     
         return response()->json(['message' => 'Fajl nije otpremljen.'], 400);
+    }
+
+    public function getTasksByStatus()
+    {
+        return response()->json(
+            Task::selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->get()
+        );
+    }
+
+    public function getTasksByCategory()
+    {
+        return response()->json(
+            Category::withCount('tasks')->get()
+        );
+    }
+
+    public function getFilesPerTask()
+    {
+        return response()->json(
+            Task::withCount('files')->get()
+        );
     }
 }

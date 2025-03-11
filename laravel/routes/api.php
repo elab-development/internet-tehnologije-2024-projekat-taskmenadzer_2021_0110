@@ -27,7 +27,7 @@ Route::post('/registracija', [UserController::class, 'registracija']);
 Route::post('/prijava', [UserController::class, 'prijava']);
 Route::post('/odjava', [UserController::class, 'odjava'])->middleware('auth:sanctum');
 Route::get('/users', [UserController::class, 'allUsers'])->middleware('auth:sanctum');
-
+Route::put('/users/{id}', [UserController::class, 'updateUserRole'])->middleware(['auth:sanctum', 'role:admin']);
 
 Route::post('/forgot-password', [UserController::class, 'sendResetLink']);
 Route::post('/reset-password', [UserController::class, 'resetPassword'])->name('password.update');
@@ -49,7 +49,7 @@ Route::resource('categories', CategoryController::class)->middleware(['auth:sanc
 
 Route::resource('tasks', TaskController::class)->except([
     'create', 'edit'
-])->middleware(['auth:sanctum', 'role:member,manager']);
+])->middleware(['auth:sanctum', 'role:member,manager,admin']);
 
 Route::get('/tasks/export/pdf', [TaskController::class, 'exportToPDF'])->middleware(['auth:sanctum', 'role:member,manager']);
 Route::post('/tasks/upload/{taskId}', [TaskController::class, 'dodajFajl'])->middleware(['auth:sanctum', 'role:member,manager']);
@@ -66,3 +66,7 @@ Route::get('/holidays', function (Request $request) {
 
     return response()->json(['error' => 'Could not fetch holidays'], 500);
 });
+
+Route::get('/admin/stats/tasks-by-status', [TaskController::class, 'getTasksByStatus'])->middleware(['auth:sanctum', 'role:admin']);
+Route::get('/admin/stats/tasks-by-category', [TaskController::class, 'getTasksByCategory'])->middleware(['auth:sanctum', 'role:admin']);
+Route::get('/admin/stats/files-per-task', [TaskController::class, 'getFilesPerTask'])->middleware(['auth:sanctum', 'role:admin']);

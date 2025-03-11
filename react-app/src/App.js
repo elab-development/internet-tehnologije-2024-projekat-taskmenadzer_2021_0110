@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './HomePage';
 import Prijava from './Prijava';
 import Registracija from './Registracija';
@@ -7,6 +7,7 @@ import NavigationMenu from './NavigationMenu';
 import KanbanBoard from './KanbanBoard';
 import Calendar from './Calendar';
 import Breadcrumb from './Breadcrumb';
+import AdminPage from './AdminPage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -38,6 +39,7 @@ function App() {
         <Route path="/kalendar" element={<Calendar />} />
         <Route path="/prijava" element={<Prijava onLogin={handleLogin} />} />
         <Route path="/registracija" element={<Registracija onLogin={handleLogin} />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </Router>
   );

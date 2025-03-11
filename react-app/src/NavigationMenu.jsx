@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 
 function NavigationMenu({ isLoggedIn, handleLogout }) {
   const navigate = useNavigate();
+  const role = localStorage.getItem('user_role');
 
   const handleLogoutClick = async () => {
     try {
@@ -50,6 +51,14 @@ function NavigationMenu({ isLoggedIn, handleLogout }) {
           >
             Kalendar
           </NavLink>
+          {role === 'admin' && (
+            <NavLink
+              to="/admin"
+              style={({ isActive }) => (isActive ? styles.activeLink : styles.link)}
+            >
+              Admin page
+            </NavLink>
+          )}
           <button onClick={handleLogoutClick} style={styles.logoutButton}>
             Odjavi se
           </button>
