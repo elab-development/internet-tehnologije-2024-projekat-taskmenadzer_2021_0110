@@ -1,0 +1,35 @@
+.date-selector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  
+  .date-selector select,
+  .date-selector input {
+    padding: 5px 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  
+  .date-selector select:hover,
+  .date-selector input:hover {
+    border-color: #007BFF;
+  }
+  
+  .date-selector select:focus,
+  .date-selector input:focus {
+    border-color: #007BFF;
+    background-color: #fff;
+  }
+  
+  .date-selector input[type='number'] {
+    width: 80px;
+    text-align: center;
+  }
+  
