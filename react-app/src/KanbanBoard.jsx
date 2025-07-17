@@ -313,7 +313,10 @@ const KanbanBoard = () => {
     // Update the task's status on the server
   fetch(`http://localhost:8000/api/tasks/${movedTask.id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+    },
     body: JSON.stringify({
       title: movedTask.title,           
       description: movedTask.description,

@@ -7,6 +7,7 @@ const Prijava = ({ onLogin }) => {
     email: '',
     password: '',
   });
+  const [errorMessage, setErrorMessage] = useState('');
 
   const navigate = useNavigate();
 
@@ -18,6 +19,7 @@ const Prijava = ({ onLogin }) => {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    setErrorMessage('');
 
     fetch('http://127.0.0.1:8000/api/prijava', {
         method: 'POST',
@@ -43,7 +45,8 @@ const Prijava = ({ onLogin }) => {
           navigate('/');
         })
         .catch((error) => {
-          console.error('There was a problem with the fetch operation:', error);
+            console.error('Greška prilikom prijave:', error);
+            setErrorMessage('Prijava nije uspela. Proverite email i lozinku.');
         });
   };
 
@@ -51,7 +54,8 @@ const Prijava = ({ onLogin }) => {
     <div className="auth-container">
       <div className="auth-card">
         <h2>Login</h2>
-        <form onSubmit={handleFormSubmit}>
+          {errorMessage && <p className="error-message">{errorMessage}</p>}
+          <form onSubmit={handleFormSubmit}>
           <label htmlFor="email">Email</label>
           <input
             type="email"
